@@ -25,13 +25,29 @@ func (a *authValidator) ValidateRegisterRequest(payload *domain.AuthRegisterRequ
 		for _, err := range castedObject {
 			switch err.Tag() {
 			case "required":
-				return errors.New(fmt.Sprintf("%s harus di isi", err.Field()))
+				return errors.New(fmt.Sprintf("%s harus diisi", err.Field()))
 			case "email":
 				return errors.New(fmt.Sprintf("%s harus berupa valid email", err.Field()))
 			case "gt":
 				return errors.New(fmt.Sprintf("%s harus lebih dari %s karakter", err.Field(), err.Param()))
 			case "numeric":
 				return errors.New(fmt.Sprintf("%s harus berupa angka", err.Field()))
+			}
+		}
+	}
+	return
+}
+
+func (a *authValidator) ValidateLoginRequest(payload *domain.AuthLoginRequest) (err error) {
+	err = a.validator.Struct(payload)
+
+	if castedObject, ok := err.(validator.ValidationErrors); ok {
+		for _, err := range castedObject {
+			switch err.Tag() {
+			case "required":
+				return errors.New(fmt.Sprintf("%s harus diisi", err.Field()))
+			case "email":
+				return errors.New(fmt.Sprintf("%s harus berupa email yang valid", err.Field()))
 			}
 		}
 	}

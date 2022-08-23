@@ -7,7 +7,7 @@ type UserModel struct {
 	Name      string
 	Email     string
 	Password  string
-	NoHp      *string
+	NoHp      string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -20,4 +20,5 @@ type UserRepository interface {
 	Create(*UserModel) error
 
 	VerifyAvailableEmail(string) int64
+	GetUserByEmail(string, ...string) (*UserModel, error)
 }

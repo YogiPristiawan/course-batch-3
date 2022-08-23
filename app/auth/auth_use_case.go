@@ -58,3 +58,29 @@ func (a *authUseCase) Register(in *domain.AuthRegisterRequest) (out domain.AuthR
 	out.Token = accessToken
 	return
 }
+
+func (a *authUseCase) Login(in *domain.AuthLoginRequest) (out domain.AuthLoginResponse) {
+	// get user by email
+	user, err := a.userRepository.GetUserByEmail(in.Email, "id", "email", "password")
+	if err != nil {
+		out.SetError(404, err.Error())
+		return
+	}
+
+	// compare password
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(in.Password))
+	if err != nil {
+		out.SetError(400, "password tidak sesuai")
+		return
+	}
+
+	// generate token
+	token, err := a.generateAccessToken(user.ID)
+	if err != nil {
+		out.SetError(500, err.Error())
+		return
+	}
+
+	out.Token = token
+	return
+}

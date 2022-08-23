@@ -19,6 +19,7 @@ func NewAuthRoute(
 	}
 
 	router.POST("/register", handler.handleRegister)
+	router.POST("/login", handler.handleLogin)
 }
 
 // Handler
@@ -51,6 +52,33 @@ func (a *authHandler) handleRegister(c *gin.Context) {
 	}
 
 	out := a.useCase.Register(&in)
+	presentation.WriteRestOut(c, out, &out.CommonResult)
+	return
+}
+
+func (a *authHandler) handleLogin(c *gin.Context) {
+	in := domain.AuthLoginRequest{}
+
+	if !presentation.ReadRestIn(c, &in) {
+		return
+	}
+
+	err := a.validator.ValidateLoginRequest(&in)
+	if err != nil {
+		out := struct {
+			CommonResult domain.CommonResult `json:"-"`
+			Message      string              `json:"message"`
+		}{
+			CommonResult: domain.CommonResult{
+				ResErrorCode:    400,
+				ResErrorMessage: err.Error(),
+			},
+		}
+		presentation.WriteRestOut(c, out, &out.CommonResult)
+		return
+	}
+
+	out := a.useCase.Login(&in)
 	presentation.WriteRestOut(c, out, &out.CommonResult)
 	return
 }
