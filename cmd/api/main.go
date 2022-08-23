@@ -2,6 +2,7 @@ package main
 
 import (
 	"course/app/auth"
+	"course/app/exercise"
 	"course/interface/http/api"
 	"course/pkg/databases"
 	"course/pkg/repositories"
@@ -23,15 +24,19 @@ func main() {
 
 	// initialize repository
 	userRepo := repositories.NewUserRepository(db)
+	exerciseRepository := repositories.NewExerciseRepository(db)
 
 	// initialize use case
 	authUseCase := auth.NewAuthUseCase(userRepo, tokenize.GenerateAccessToken)
+	exerciseUseCase := exercise.NewExerciseUseCase(exerciseRepository)
 
 	// initialize validator
 	authValidator := restValidator.NewAuthValidator(validator)
+	exerciseValidator := restValidator.NewExerciseValidator(validator)
 
 	// instance routes
 	api.NewAuthRoute(router, authUseCase, authValidator)
+	api.NewExerciseRoute(router, exerciseUseCase, exerciseValidator)
 
 	// db := database.NewDabataseConn()
 	// exerciseUcs := usecase.NewExerciseUsecase(db)

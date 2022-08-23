@@ -13,7 +13,6 @@ func NewAuthRoute(
 	validator domain.AuthValidator,
 ) {
 	handler := &authHandler{
-		router:    router,
 		useCase:   useCase,
 		validator: validator,
 	}
@@ -24,7 +23,6 @@ func NewAuthRoute(
 
 // Handler
 type authHandler struct {
-	router    *gin.Engine
 	useCase   domain.AuthUseCase
 	validator domain.AuthValidator
 }
