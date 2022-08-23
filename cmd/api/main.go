@@ -1,31 +1,52 @@
 package main
 
 import (
-	"course/internal/database"
-	"course/internal/exercise/usecase"
-	"course/internal/middleware"
-	userUc "course/internal/user/usecase"
+	"course/app/auth"
+	"course/interface/http/api"
+	"course/pkg/databases"
+	"course/pkg/repositories"
+	"course/pkg/tokenize"
+	restValidator "course/pkg/validator/rest"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 func main() {
-	r := gin.Default()
+	router := gin.Default()
 
-	db := database.NewDabataseConn()
-	exerciseUcs := usecase.NewExerciseUsecase(db)
-	userUcs := userUc.NewUserUsecase(db)
-	r.GET("/hello", func(c *gin.Context) {
-		c.JSON(200, map[string]string{
-			"message": "hello world",
-		})
-	})
+	// initialize database
+	db := databases.NewDatabaseConn()
+
+	// initialize pkg
+	validator := validator.New()
+
+	// initialize repository
+	userRepo := repositories.NewUserRepository(db)
+
+	// initialize use case
+	authUseCase := auth.NewAuthUseCase(userRepo, tokenize.GenerateAccessToken)
+
+	// initialize validator
+	authValidator := restValidator.NewAuthValidator(validator)
+
+	// instance routes
+	api.NewAuthRoute(router, authUseCase, authValidator)
+
+	// db := database.NewDabataseConn()
+	// exerciseUcs := usecase.NewExerciseUsecase(db)
+	// userUcs := userUc.NewUserUsecase(db)
+	// r.GET("/hello", func(c *gin.Context) {
+	// 	c.JSON(200, map[string]string{
+	// 		"message": "hello world",
+	// 	})
+	// })
 	// exercise
-	r.GET("/exercises/:id", middleware.WithAuthentication(userUcs), exerciseUcs.GetExercise)
-	r.GET("/exercises/:id/scores", middleware.WithAuthentication(userUcs), exerciseUcs.CalculateScore)
+	// r.GET("/exercises/:id", middleware.WithAuthentication(userUcs), exerciseUcs.GetExercise)
+	// r.GET("/exercises/:id/scores", middleware.WithAuthentication(userUcs), exerciseUcs.CalculateScore)
 
-	// user
-	r.POST("/register", userUcs.Register)
-	r.POST("/login", userUcs.Login)
-	r.Run(":1234")
+	// // user
+	// r.POST("/register", userUcs.Register)
+	// r.POST("/login", userUcs.Login)
+	router.Run(":1234")
 }
