@@ -22,9 +22,10 @@ func NewExerciseRoute(
 	}
 
 	router.POST("/exercises", middleware.AuthMiddleware(), handler.handleCreateExercise)
-	router.GET("/exercises/:id", middleware.AuthMiddleware(), handler.handleGetExerciseById)
-	router.GET("/exercises/:id/score", middleware.AuthMiddleware(), handler.handleGetExerciseScore)
-	router.POST("/exercises/:id/questions", middleware.AuthMiddleware(), handler.handleCreateExerciseQuestion)
+	router.GET("/exercises/:exerciseId", middleware.AuthMiddleware(), handler.handleGetExerciseById)
+	router.GET("/exercises/:exerciseId/score", middleware.AuthMiddleware(), handler.handleGetExerciseScore)
+	router.POST("/exercises/:exerciseId/questions", middleware.AuthMiddleware(), handler.handleCreateExerciseQuestion)
+	router.POST("/exercises/:exerciseId/questions/:questionId/answer", middleware.AuthMiddleware(), handler.handleCreateExerciseAnswer)
 }
 
 // Handler
@@ -59,7 +60,7 @@ func (e *exerciseHandler) handleCreateExercise(c *gin.Context) {
 }
 
 func (e *exerciseHandler) handleGetExerciseById(c *gin.Context) {
-	exerciseId, err := strconv.Atoi(c.Param("id"))
+	exerciseId, err := strconv.Atoi(c.Param("exerciseId"))
 	// if param not number
 	if err != nil {
 		out := struct {
@@ -82,11 +83,10 @@ func (e *exerciseHandler) handleGetExerciseById(c *gin.Context) {
 	// call use case
 	out := e.useCase.GetById(&in)
 	presentation.WriteRestOut(c, out, &out.CommonResult)
-	return
 }
 
 func (e *exerciseHandler) handleGetExerciseScore(c *gin.Context) {
-	exerciseId, err := strconv.Atoi(c.Param("id"))
+	exerciseId, err := strconv.Atoi(c.Param("exerciseId"))
 	if err != nil {
 		out := struct {
 			CommonResult domain.CommonResult
@@ -115,7 +115,7 @@ func (e *exerciseHandler) handleGetExerciseScore(c *gin.Context) {
 }
 
 func (e *exerciseHandler) handleCreateExerciseQuestion(c *gin.Context) {
-	exerciseId, err := strconv.Atoi(c.Param("id"))
+	exerciseId, err := strconv.Atoi(c.Param("exerciseId"))
 	if err != nil {
 		out := struct {
 			CommonResult domain.CommonResult
@@ -157,5 +157,52 @@ func (e *exerciseHandler) handleCreateExerciseQuestion(c *gin.Context) {
 	}
 
 	out := e.useCase.CreateExerciseQuestion(&in)
+	presentation.WriteRestOut(c, out, &out.CommonResult)
+}
+
+func (e *exerciseHandler) handleCreateExerciseAnswer(c *gin.Context) {
+	exerciseId, err1 := strconv.Atoi(c.Param("exerciseId"))
+	questionId, err2 := strconv.Atoi(c.Param("questionId"))
+	authUserId, _ := c.Get("user_id")
+
+	if err1 != nil || err2 != nil {
+		out := struct {
+			CommonResult domain.CommonResult
+		}{
+			CommonResult: domain.CommonResult{
+				ResErrorCode:    400,
+				ResErrorMessage: "parameter harus berupa angka",
+			},
+		}
+		presentation.WriteRestOut(c, out, &out.CommonResult)
+		return
+	}
+
+	in := domain.ExerciseAnswerCreateRequest{
+		RequestMetadata: domain.RequestMetadata{
+			AuthUserId: int(authUserId.(float64)),
+		},
+		ExerciseId: exerciseId,
+		QuestionId: questionId,
+	}
+
+	if !presentation.ReadRestIn(c, &in) {
+		return
+	}
+
+	if err := e.questionValidator.ValidateCreateAnswerPayload(&in); err != nil {
+		out := struct {
+			CommonResult domain.CommonResult
+		}{
+			CommonResult: domain.CommonResult{
+				ResErrorCode:    400,
+				ResErrorMessage: err.Error(),
+			},
+		}
+		presentation.WriteRestOut(c, out, &out.CommonResult)
+		return
+	}
+
+	out := e.useCase.CreateExerciseAnswer(&in)
 	presentation.WriteRestOut(c, out, &out.CommonResult)
 }

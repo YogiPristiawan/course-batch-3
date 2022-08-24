@@ -25,9 +25,14 @@ func (q *QuestionModel) TableName() string {
 
 type QuestionValidator interface {
 	ValidateCreateQuestionPayload(*ExerciseQuestionCreateRequest) HttpError
+	ValidateCreateAnswerPayload(*ExerciseAnswerCreateRequest) HttpError
 }
 
 type QuestionRepository interface {
 	FindByExerciseId(int) ([]*QuestionModel, HttpError)
 	Create(*QuestionModel) HttpError
+	CreateQuestionAnswer(*AnswerModel) HttpError
+
+	VerifyExerciseAndQuestionId(exerciseId int, questionId int) HttpError
+	VerifyExistsAnswer(userId int, exerciseId int, questionId int) HttpError
 }

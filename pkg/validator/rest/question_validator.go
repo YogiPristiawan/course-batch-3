@@ -27,7 +27,21 @@ func (q *questionValidator) ValidateCreateQuestionPayload(payload *domain.Exerci
 			switch err.Tag() {
 			case "required":
 				return domain.NewBadRequestError(fmt.Errorf("%s harus diisi", err.Field()))
-			case "eq":
+			case "oneof":
+				return domain.NewBadRequestError(fmt.Errorf("%s hanya boleh a,b,c atau d", err.Field()))
+			}
+		}
+	}
+	return nil
+}
+
+func (q *questionValidator) ValidateCreateAnswerPayload(payload *domain.ExerciseAnswerCreateRequest) domain.HttpError {
+	err := q.validator.Struct(payload)
+
+	if castedObject, ok := err.(validator.ValidationErrors); ok {
+		for _, err := range castedObject {
+			switch err.Tag() {
+			case "oneof":
 				return domain.NewBadRequestError(fmt.Errorf("%s hanya boleh a,b,c atau d", err.Field()))
 			}
 		}

@@ -16,6 +16,7 @@ type ExerciseUseCase interface {
 	GetById(*ExerciseGetByIdRequest) ExerciseGetByIdResponse
 	GetExerciseScore(*ExerciseScoreRequest) ExerciseScoreResponse
 	CreateExerciseQuestion(*ExerciseQuestionCreateRequest) ExerciseQuestionCreateResponse
+	CreateExerciseAnswer(*ExerciseAnswerCreateRequest) ExerciseAnswerCreateResponse
 }
 
 type ExerciseRepository interface {
@@ -76,10 +77,23 @@ type ExerciseQuestionCreateRequest struct {
 	OptionC       string `json:"option_c" validate:"required"`
 	OptionD       string `json:"option_d" validae:"required"`
 	Score         int    `json:"score" validate:"required"`
-	CorrectAnswer string `json:"correct_answer" validate:"required,eq=a|eq=b|eq=c|eq=d"`
+	CorrectAnswer string `json:"correct_answer" validate:"required,oneof=a b c d"`
 }
 
 type ExerciseQuestionCreateResponse struct {
+	CommonResult
+	Message string `json:"message"`
+}
+
+// create answer
+type ExerciseAnswerCreateRequest struct {
+	RequestMetadata
+	ExerciseId int
+	QuestionId int
+	Answer     string `json:"answer" validate:"required,oneof=a b c d"`
+}
+
+type ExerciseAnswerCreateResponse struct {
 	CommonResult
 	Message string `json:"message"`
 }

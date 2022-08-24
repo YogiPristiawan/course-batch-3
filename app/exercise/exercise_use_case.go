@@ -138,3 +138,32 @@ func (e *exerciseUseCase) CreateExerciseQuestion(in *domain.ExerciseQuestionCrea
 	out.Message = "berhasil menambah pertanyaaan"
 	return
 }
+
+func (e *exerciseUseCase) CreateExerciseAnswer(in *domain.ExerciseAnswerCreateRequest) (out domain.ExerciseAnswerCreateResponse) {
+	// verify if question exists
+	err := e.questionRepository.VerifyExerciseAndQuestionId(in.ExerciseId, in.QuestionId)
+	if domain.HandleHttpError(err, &out.CommonResult) {
+		return
+	}
+
+	// verify if answer already created
+	err = e.questionRepository.VerifyExistsAnswer(in.AuthUserId, in.ExerciseId, in.QuestionId)
+	if domain.HandleHttpError(err, &out.CommonResult) {
+		return
+	}
+
+	// craete answer
+	answer := domain.AnswerModel{
+		ExerciseId: in.ExerciseId,
+		QuestionId: in.QuestionId,
+		UserId:     in.AuthUserId,
+		Answer:     in.Answer,
+	}
+	err = e.questionRepository.CreateQuestionAnswer(&answer)
+	if domain.HandleHttpError(err, &out.CommonResult) {
+		return
+	}
+
+	out.Message = "berhasil menjawab pertanyaan"
+	return
+}

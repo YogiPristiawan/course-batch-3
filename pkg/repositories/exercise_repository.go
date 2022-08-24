@@ -26,7 +26,7 @@ func (e *exerciseRepository) Create(exercise *domain.ExerciseModel) (err error) 
 
 func (e *exerciseRepository) GetById(id int) (result *domain.ExerciseModel, err domain.HttpError) {
 	dbError := e.db.Where("id = ?", id).First(&result).Error
-	err = helpers.CastDatabaseError(dbError, false)
+	err = helpers.CastDatabaseError(dbError, true)
 	return
 }
 

@@ -33,5 +33,4 @@ func WriteRestOut[T interface{}](c *gin.Context, out T, cr *domain.CommonResult)
 	}
 
 	c.AbortWithStatusJSON(500, gin.H{"message": "internal server error"})
-	return
 }
