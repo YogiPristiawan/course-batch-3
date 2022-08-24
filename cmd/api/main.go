@@ -25,10 +25,11 @@ func main() {
 	// initialize repository
 	userRepo := repositories.NewUserRepository(db)
 	exerciseRepository := repositories.NewExerciseRepository(db)
+	questionRepository := repositories.NewQuestionRepository(db)
 
 	// initialize use case
 	authUseCase := auth.NewAuthUseCase(userRepo, tokenize.GenerateAccessToken)
-	exerciseUseCase := exercise.NewExerciseUseCase(exerciseRepository)
+	exerciseUseCase := exercise.NewExerciseUseCase(exerciseRepository, questionRepository)
 
 	// initialize validator
 	authValidator := restValidator.NewAuthValidator(validator)

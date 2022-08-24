@@ -4,6 +4,7 @@ import (
 	"course/domain"
 	"course/pkg/middleware"
 	"course/presentation"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,6 +20,7 @@ func NewExerciseRoute(
 	}
 
 	router.POST("/exercises", middleware.AuthMiddleware(), handler.handleCreateExercise)
+	router.GET("/exercises/:id", middleware.AuthMiddleware(), handler.handleGetExerciseById)
 }
 
 // Handler
@@ -48,6 +50,33 @@ func (e *exerciseHandler) handleCreateExercise(c *gin.Context) {
 	}
 
 	out := e.useCase.CreateExercise(&in)
+	presentation.WriteRestOut(c, out, &out.CommonResult)
+	return
+}
+
+func (e *exerciseHandler) handleGetExerciseById(c *gin.Context) {
+	exerciseId, err := strconv.Atoi(c.Param("id"))
+	// if param not number
+	if err != nil {
+		out := struct {
+			CommonResult domain.CommonResult
+		}{
+			CommonResult: domain.CommonResult{
+				ResErrorCode:    400,
+				ResErrorMessage: "parameter harus berupa angka",
+			},
+		}
+
+		presentation.WriteRestOut(c, out, &out.CommonResult)
+		return
+	}
+
+	in := domain.ExerciseGetByIdRequest{
+		ID: exerciseId,
+	}
+
+	// call use case
+	out := e.useCase.GetById(&in)
 	presentation.WriteRestOut(c, out, &out.CommonResult)
 	return
 }
