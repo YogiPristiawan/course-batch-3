@@ -30,26 +30,18 @@ func (e *exerciseRepository) GetById(id int) (result *domain.ExerciseModel, err 
 	return
 }
 
-func (e *exerciseRepository) GetByIdWithQuestions(id int) (results []map[string]interface{}, err error) {
-	err = e.db.Raw(`
+func (e *exerciseRepository) FindUserQuestionAnswer(exerciseId int, userId int) (results []map[string]interface{}, err domain.HttpError) {
+	dbError := e.db.Raw(`
 		SELECT
-			exercises.id,
-			exercises.title,
-			exercises.description,
-			questions.id AS question_id,
-			questions.body AS question_body,
-			questions.option_a AS question_option_a,
-			questions.option_b AS question_option_b,
-			questions.option_c AS question_option_c,
-			questions.option_d AS question_option_d,
-			questions.score AS question_score,
-			questions.created_at AS question_created_at,
-			questions.updated_at AS question_updated_at
+			questions.correct_answer,
+			questions.score,
+			answers.answer AS user_answer
 		FROM
-			exercises
-			JOIN questions ON questions.exercise_id = exercises.id AND exercises.id = ?
-		ORDER BY
-			questions.id DESC
-	`, id).Scan(&results).Error
+			answers
+			INNER JOIN questions ON questions.id = answers.question_id AND questions.exercise_id = ?
+		WHERE
+			answers.user_id = ?
+	`, exerciseId, userId).Find(&results).Error
+	err = helpers.CastDatabaseError(dbError, false)
 	return
 }

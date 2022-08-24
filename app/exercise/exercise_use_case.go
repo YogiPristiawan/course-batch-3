@@ -2,6 +2,9 @@ package exercise
 
 import (
 	"course/domain"
+	"strconv"
+	"strings"
+	"sync"
 )
 
 type exerciseUseCase struct {
@@ -64,11 +67,41 @@ func (e *exerciseUseCase) GetById(in *domain.ExerciseGetByIdRequest) (out domain
 			question["updated_at"] = val.UpdatedAt
 
 			out.Questions = append(out.Questions, question)
-
 		}
 	} else {
 		out.Questions = []map[string]interface{}{}
 	}
 
+	return
+}
+
+func (e *exerciseUseCase) GetExerciseScore(in *domain.ExerciseScoreRequest) (out domain.ExerciseScoreResponse) {
+	// verify if exercise exists
+	_, err := e.exerciseRepository.GetById(in.ID)
+	domain.HandleHttpError(err, &out.CommonResult)
+
+	exercises, err := e.exerciseRepository.FindUserQuestionAnswer(in.ID, in.AuthUserId)
+	domain.HandleHttpError(err, &out.CommonResult)
+
+	// calculate score
+	var wg sync.WaitGroup
+	var m sync.Mutex
+	var score int
+
+	for _, val := range exercises {
+		wg.Add(1)
+		go func(val map[string]interface{}) {
+			m.Lock()
+			defer m.Unlock()
+			defer wg.Done()
+
+			if strings.EqualFold(val["correct_answer"].(string), val["user_answer"].(string)) {
+				score += int(val["score"].(int32))
+			}
+		}(val)
+	}
+	wg.Wait()
+
+	out.Score = strconv.Itoa(score)
 	return
 }

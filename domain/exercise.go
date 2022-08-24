@@ -11,6 +11,19 @@ func (e *ExerciseModel) TableName() string {
 	return "exercises"
 }
 
+type ExerciseUseCase interface {
+	CreateExercise(*ExerciseCreateRequest) ExerciseCreateResponse
+	GetById(*ExerciseGetByIdRequest) ExerciseGetByIdResponse
+	GetExerciseScore(*ExerciseScoreRequest) ExerciseScoreResponse
+}
+
+type ExerciseRepository interface {
+	Create(*ExerciseModel) error
+	GetById(int) (*ExerciseModel, HttpError)
+
+	FindUserQuestionAnswer(exerciseId int, userId int) ([]map[string]interface{}, HttpError)
+}
+
 // create exercise
 type ExerciseCreateRequest struct {
 	Title       string `json:"title" validate:"required,max=200"`
@@ -41,24 +54,13 @@ type ExerciseGetByIdResponse struct {
 	Questions   []map[string]interface{} `json:"questions"`
 }
 
-// type exerciseGetByIdQuestion struct {
-// 	QuestionId int
-// 	Body       string `json:"body"`
-// 	OptionA    string `json:"option_a"`
-// 	OptionB    string `json:"option_b"`
-// 	OptionC    string `json:"option_c"`
-// 	OptionD    string `json:"option_d"`
-// 	Score      string `json:"score"`
-// 	CreatedAt  string `json:"created_at"`
-// 	UpdatedAt  string `json:"updated_at"`
-// }
-
-type ExerciseUseCase interface {
-	CreateExercise(*ExerciseCreateRequest) ExerciseCreateResponse
-	GetById(*ExerciseGetByIdRequest) ExerciseGetByIdResponse
+// get exercise score
+type ExerciseScoreRequest struct {
+	RequestMetadata
+	ID int
 }
 
-type ExerciseRepository interface {
-	Create(*ExerciseModel) error
-	GetById(int) (*ExerciseModel, HttpError)
+type ExerciseScoreResponse struct {
+	CommonResult
+	Score string `json:"score"`
 }
