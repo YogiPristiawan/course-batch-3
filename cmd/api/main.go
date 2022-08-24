@@ -34,10 +34,11 @@ func main() {
 	// initialize validator
 	authValidator := restValidator.NewAuthValidator(validator)
 	exerciseValidator := restValidator.NewExerciseValidator(validator)
+	questionValidator := restValidator.NewQuestionValidator(validator)
 
 	// instance routes
 	api.NewAuthRoute(router, authUseCase, authValidator)
-	api.NewExerciseRoute(router, exerciseUseCase, exerciseValidator)
+	api.NewExerciseRoute(router, exerciseUseCase, exerciseValidator, questionValidator)
 
 	// db := database.NewDabataseConn()
 	// exerciseUcs := usecase.NewExerciseUsecase(db)

@@ -111,9 +111,10 @@ func (i *internalServerError) GetCode() int {
 }
 
 // handle http error
-func HandleHttpError(err HttpError, out *CommonResult) {
+func HandleHttpError(err HttpError, out *CommonResult) bool {
 	if err != nil {
 		out.SetError(err.GetCode(), err.Error())
-		return
+		return true
 	}
+	return false
 }

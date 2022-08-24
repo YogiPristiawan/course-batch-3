@@ -78,10 +78,14 @@ func (e *exerciseUseCase) GetById(in *domain.ExerciseGetByIdRequest) (out domain
 func (e *exerciseUseCase) GetExerciseScore(in *domain.ExerciseScoreRequest) (out domain.ExerciseScoreResponse) {
 	// verify if exercise exists
 	_, err := e.exerciseRepository.GetById(in.ID)
-	domain.HandleHttpError(err, &out.CommonResult)
+	if domain.HandleHttpError(err, &out.CommonResult) {
+		return
+	}
 
 	exercises, err := e.exerciseRepository.FindUserQuestionAnswer(in.ID, in.AuthUserId)
-	domain.HandleHttpError(err, &out.CommonResult)
+	if domain.HandleHttpError(err, &out.CommonResult) {
+		return
+	}
 
 	// calculate score
 	var wg sync.WaitGroup
@@ -103,5 +107,34 @@ func (e *exerciseUseCase) GetExerciseScore(in *domain.ExerciseScoreRequest) (out
 	wg.Wait()
 
 	out.Score = strconv.Itoa(score)
+	return
+}
+
+func (e *exerciseUseCase) CreateExerciseQuestion(in *domain.ExerciseQuestionCreateRequest) (out domain.ExerciseQuestionCreateResponse) {
+	// verify if exercise exists
+	_, err := e.exerciseRepository.GetById(in.ExerciseId)
+
+	if domain.HandleHttpError(err, &out.CommonResult) {
+		return
+	}
+
+	// create qeustion
+	question := domain.QuestionModel{
+		Body:          in.Body,
+		OptionA:       in.OptionA,
+		OptionB:       in.OptionB,
+		OptionC:       in.OptionC,
+		OptionD:       in.OptionD,
+		Score:         in.Score,
+		CorrectAnswer: in.CorrectAnswer,
+		CreatorId:     in.AuthUserId,
+		ExerciseId:    in.ExerciseId,
+	}
+	err = e.questionRepository.Create(&question)
+	if domain.HandleHttpError(err, &out.CommonResult) {
+		return
+	}
+
+	out.Message = "berhasil menambah pertanyaaan"
 	return
 }

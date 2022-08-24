@@ -15,6 +15,7 @@ type ExerciseUseCase interface {
 	CreateExercise(*ExerciseCreateRequest) ExerciseCreateResponse
 	GetById(*ExerciseGetByIdRequest) ExerciseGetByIdResponse
 	GetExerciseScore(*ExerciseScoreRequest) ExerciseScoreResponse
+	CreateExerciseQuestion(*ExerciseQuestionCreateRequest) ExerciseQuestionCreateResponse
 }
 
 type ExerciseRepository interface {
@@ -24,14 +25,14 @@ type ExerciseRepository interface {
 	FindUserQuestionAnswer(exerciseId int, userId int) ([]map[string]interface{}, HttpError)
 }
 
+type ExerciseValidator interface {
+	ValidateCreateExercisePayload(*ExerciseCreateRequest) error
+}
+
 // create exercise
 type ExerciseCreateRequest struct {
 	Title       string `json:"title" validate:"required,max=200"`
 	Description string `json:"description" validate:"required,max=2000"`
-}
-
-type ExerciseValidator interface {
-	ValidateCreateExercisePayload(*ExerciseCreateRequest) error
 }
 
 type ExerciseCreateResponse struct {
@@ -63,4 +64,22 @@ type ExerciseScoreRequest struct {
 type ExerciseScoreResponse struct {
 	CommonResult
 	Score string `json:"score"`
+}
+
+// create exercise question
+type ExerciseQuestionCreateRequest struct {
+	RequestMetadata
+	ExerciseId    int    `json:"-"`
+	Body          string `json:"body" validate:"required"`
+	OptionA       string `json:"option_a" validate:"required"`
+	OptionB       string `json:"option_b" validate:"required"`
+	OptionC       string `json:"option_c" validate:"required"`
+	OptionD       string `json:"option_d" validae:"required"`
+	Score         int    `json:"score" validate:"required"`
+	CorrectAnswer string `json:"correct_answer" validate:"required,eq=a|eq=b|eq=c|eq=d"`
+}
+
+type ExerciseQuestionCreateResponse struct {
+	CommonResult
+	Message string `json:"message"`
 }

@@ -24,3 +24,9 @@ func (q *questionRepository) FindByExerciseId(exerciseId int) (questions []*doma
 	err = helpers.CastDatabaseError(dbError, true)
 	return
 }
+
+func (q *questionRepository) Create(question *domain.QuestionModel) (err domain.HttpError) {
+	dbError := q.db.Create(question).Error
+	err = helpers.CastDatabaseError(dbError, false)
+	return
+}

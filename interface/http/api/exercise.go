@@ -12,22 +12,26 @@ import (
 func NewExerciseRoute(
 	router *gin.Engine,
 	useCase domain.ExerciseUseCase,
-	validator domain.ExerciseValidator,
+	exerciseValidator domain.ExerciseValidator,
+	questionValidator domain.QuestionValidator,
 ) {
 	handler := &exerciseHandler{
-		validator: validator,
-		useCase:   useCase,
+		exerciseValidator: exerciseValidator,
+		useCase:           useCase,
+		questionValidator: questionValidator,
 	}
 
 	router.POST("/exercises", middleware.AuthMiddleware(), handler.handleCreateExercise)
 	router.GET("/exercises/:id", middleware.AuthMiddleware(), handler.handleGetExerciseById)
 	router.GET("/exercises/:id/score", middleware.AuthMiddleware(), handler.handleGetExerciseScore)
+	router.POST("/exercises/:id/questions", middleware.AuthMiddleware(), handler.handleCreateExerciseQuestion)
 }
 
 // Handler
 type exerciseHandler struct {
-	validator domain.ExerciseValidator
-	useCase   domain.ExerciseUseCase
+	exerciseValidator domain.ExerciseValidator
+	questionValidator domain.QuestionValidator
+	useCase           domain.ExerciseUseCase
 }
 
 func (e *exerciseHandler) handleCreateExercise(c *gin.Context) {
@@ -37,7 +41,7 @@ func (e *exerciseHandler) handleCreateExercise(c *gin.Context) {
 		return
 	}
 
-	if err := e.validator.ValidateCreateExercisePayload(&in); err != nil {
+	if err := e.exerciseValidator.ValidateCreateExercisePayload(&in); err != nil {
 		out := struct {
 			CommonResult domain.CommonResult `json:"-"`
 		}{
@@ -52,7 +56,6 @@ func (e *exerciseHandler) handleCreateExercise(c *gin.Context) {
 
 	out := e.useCase.CreateExercise(&in)
 	presentation.WriteRestOut(c, out, &out.CommonResult)
-	return
 }
 
 func (e *exerciseHandler) handleGetExerciseById(c *gin.Context) {
@@ -108,5 +111,51 @@ func (e *exerciseHandler) handleGetExerciseScore(c *gin.Context) {
 
 	// call use case
 	out := e.useCase.GetExerciseScore(&in)
+	presentation.WriteRestOut(c, out, &out.CommonResult)
+}
+
+func (e *exerciseHandler) handleCreateExerciseQuestion(c *gin.Context) {
+	exerciseId, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		out := struct {
+			CommonResult domain.CommonResult
+		}{
+			CommonResult: domain.CommonResult{
+				ResErrorCode:    400,
+				ResErrorMessage: "parameter harus berupa angka",
+			},
+		}
+
+		presentation.WriteRestOut(c, out, &out.CommonResult)
+		return
+	}
+
+	authUserId, _ := c.Get("user_id")
+	in := domain.ExerciseQuestionCreateRequest{
+		RequestMetadata: domain.RequestMetadata{
+			AuthUserId: int(authUserId.(float64)),
+		},
+		ExerciseId: exerciseId,
+	}
+
+	if !presentation.ReadRestIn(c, &in) {
+		return
+	}
+
+	if err = e.questionValidator.ValidateCreateQuestionPayload(&in); err != nil {
+		out := struct {
+			CommonResult domain.CommonResult
+		}{
+			CommonResult: domain.CommonResult{
+				ResErrorCode:    400,
+				ResErrorMessage: err.Error(),
+			},
+		}
+
+		presentation.WriteRestOut(c, out, &out.CommonResult)
+		return
+	}
+
+	out := e.useCase.CreateExerciseQuestion(&in)
 	presentation.WriteRestOut(c, out, &out.CommonResult)
 }
