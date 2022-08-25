@@ -14,7 +14,7 @@
 ## Dependencies
 
 - mysql
-- golang
+- golang > v1.18
 
 ## API Documentation
 
