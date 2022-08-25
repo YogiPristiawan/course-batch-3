@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"course/domain"
-	"errors"
+	"course/pkg/helpers"
 
 	"gorm.io/gorm"
 )
@@ -19,23 +19,21 @@ func NewUserRepository(
 	}
 }
 
-func (u *userRepository) Create(user *domain.UserModel) (err error) {
-	err = u.db.Create(user).Error
+func (u *userRepository) Create(user *domain.UserModel) (err domain.HttpError) {
+	dbError := u.db.Create(user).Error
+	err = helpers.CastDatabaseError(dbError, true)
 	return
 }
 
-func (u *userRepository) VerifyAvailableEmail(email string) (count int64) {
-	u.db.Model(domain.UserModel{}).Where("email = ?", email).Count(&count)
+func (u *userRepository) VerifyAvailableEmail(email string) (err domain.HttpError) {
+	var count int64
+	dbError := u.db.Model(domain.UserModel{}).Where("email = ?", email).Count(&count).Error
+	err = helpers.CastDatabaseError(dbError, true)
 	return
 }
 
-func (u *userRepository) GetUserByEmail(email string, fields ...string) (user *domain.UserModel, err error) {
-	err = u.db.Select(fields).Where("email = ?", email).First(&user).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			err = errors.New("user belum terdaftar")
-			return
-		}
-	}
+func (u *userRepository) GetUserByEmail(email string, fields ...string) (user *domain.UserModel, err domain.HttpError) {
+	dbError := u.db.Select(fields).Where("email = ?", email).First(&user).Error
+	err = helpers.CastDatabaseError(dbError, true)
 	return
 }

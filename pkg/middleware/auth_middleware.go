@@ -21,7 +21,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		claims, err := tokenize.DecodeJwt(token)
 		if err != nil {
 			c.AbortWithStatusJSON(401, gin.H{
-				"messag": err.Error(),
+				"message": err.Error(),
 			})
 		}
 		c.Set("user_id", claims["user_id"])

@@ -5,6 +5,7 @@ import (
 	"course/app/exercise"
 	"course/interface/http/api"
 	"course/pkg/databases"
+	"course/pkg/helpers"
 	"course/pkg/repositories"
 	"course/pkg/tokenize"
 	restValidator "course/pkg/validator/rest"
@@ -28,7 +29,7 @@ func main() {
 	questionRepository := repositories.NewQuestionRepository(db)
 
 	// initialize use case
-	authUseCase := auth.NewAuthUseCase(userRepo, tokenize.GenerateAccessToken)
+	authUseCase := auth.NewAuthUseCase(userRepo, tokenize.GenerateAccessToken, helpers.CompareHashAndPassword)
 	exerciseUseCase := exercise.NewExerciseUseCase(exerciseRepository, questionRepository)
 
 	// initialize validator
@@ -40,20 +41,5 @@ func main() {
 	api.NewAuthRoute(router, authUseCase, authValidator)
 	api.NewExerciseRoute(router, exerciseUseCase, exerciseValidator, questionValidator)
 
-	// db := database.NewDabataseConn()
-	// exerciseUcs := usecase.NewExerciseUsecase(db)
-	// userUcs := userUc.NewUserUsecase(db)
-	// r.GET("/hello", func(c *gin.Context) {
-	// 	c.JSON(200, map[string]string{
-	// 		"message": "hello world",
-	// 	})
-	// })
-	// exercise
-	// r.GET("/exercises/:id", middleware.WithAuthentication(userUcs), exerciseUcs.GetExercise)
-	// r.GET("/exercises/:id/scores", middleware.WithAuthentication(userUcs), exerciseUcs.CalculateScore)
-
-	// // user
-	// r.POST("/register", userUcs.Register)
-	// r.POST("/login", userUcs.Login)
 	router.Run(":1234")
 }

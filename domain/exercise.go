@@ -4,7 +4,6 @@ type ExerciseModel struct {
 	ID          int `gorm:"primaryKey"`
 	Title       string
 	Description string
-	QuestionModel
 }
 
 func (e *ExerciseModel) TableName() string {
@@ -20,14 +19,14 @@ type ExerciseUseCase interface {
 }
 
 type ExerciseRepository interface {
-	Create(*ExerciseModel) error
+	Create(*ExerciseModel) HttpError
 	GetById(int) (*ExerciseModel, HttpError)
 
 	FindUserQuestionAnswer(exerciseId int, userId int) ([]map[string]interface{}, HttpError)
 }
 
 type ExerciseValidator interface {
-	ValidateCreateExercisePayload(*ExerciseCreateRequest) error
+	ValidateCreateExercisePayload(*ExerciseCreateRequest) HttpError
 }
 
 // create exercise

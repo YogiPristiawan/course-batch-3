@@ -7,30 +7,32 @@ import (
 )
 
 type authUseCase struct {
-	userRepository      domain.UserRepository
-	generateAccessToken func(int) (string, error)
+	userRepository         domain.UserRepository
+	generateAccessToken    func(int) (string, domain.HttpError)
+	compareHashAndPassword func(string, string) domain.HttpError
 }
 
 func NewAuthUseCase(
 	userRepository domain.UserRepository,
-	generateAccessToken func(int) (string, error),
+	generateAccessToken func(int) (string, domain.HttpError),
+	compareHashAndPassword func(string, string) domain.HttpError,
 ) domain.AuthUseCase {
 	return &authUseCase{
-		userRepository:      userRepository,
-		generateAccessToken: generateAccessToken,
+		userRepository:         userRepository,
+		generateAccessToken:    generateAccessToken,
+		compareHashAndPassword: compareHashAndPassword,
 	}
 }
 
 func (a *authUseCase) Register(in *domain.AuthRegisterRequest) (out domain.AuthRegisterResponse) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(in.Password), bcrypt.DefaultCost)
-	if err != nil {
-		out.SetError(500, err.Error())
+	if domain.HandleHttpError(err, &out.CommonResult) {
 		return
 	}
 
 	// verify if email available
-	if a.userRepository.VerifyAvailableEmail(in.Email) > 0 {
-		out.SetError(400, "email sudah terdaftar")
+	err = a.userRepository.VerifyAvailableEmail(in.Email)
+	if domain.HandleHttpError(err, &out.CommonResult) {
 		return
 	}
 
@@ -43,15 +45,13 @@ func (a *authUseCase) Register(in *domain.AuthRegisterRequest) (out domain.AuthR
 	}
 
 	err = a.userRepository.Create(user)
-	if err != nil {
-		out.SetError(500, err.Error())
+	if domain.HandleHttpError(err, &out.CommonResult) {
 		return
 	}
 
 	// generate access token
 	accessToken, err := a.generateAccessToken(user.ID)
-	if err != nil {
-		out.SetError(500, err.Error())
+	if domain.HandleHttpError(err, &out.CommonResult) {
 		return
 	}
 
@@ -62,22 +62,19 @@ func (a *authUseCase) Register(in *domain.AuthRegisterRequest) (out domain.AuthR
 func (a *authUseCase) Login(in *domain.AuthLoginRequest) (out domain.AuthLoginResponse) {
 	// get user by email
 	user, err := a.userRepository.GetUserByEmail(in.Email, "id", "email", "password")
-	if err != nil {
-		out.SetError(404, err.Error())
+	if domain.HandleHttpError(err, &out.CommonResult) {
 		return
 	}
 
 	// compare password
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(in.Password))
-	if err != nil {
-		out.SetError(400, "password tidak sesuai")
+	err = a.compareHashAndPassword(user.Password, in.Password)
+	if domain.HandleHttpError(err, &out.CommonResult) {
 		return
 	}
 
 	// generate token
-	token, err := a.generateAccessToken(user.ID)
-	if err != nil {
-		out.SetError(500, err.Error())
+	token, rawError := a.generateAccessToken(user.ID)
+	if domain.HandleHttpError(rawError, &out.CommonResult) {
 		return
 	}
 

@@ -2,7 +2,6 @@ package rest
 
 import (
 	"course/domain"
-	"errors"
 	"fmt"
 
 	"github.com/go-playground/validator/v10"
@@ -18,36 +17,36 @@ func NewAuthValidator(validator *validator.Validate) domain.AuthValidator {
 	}
 }
 
-func (a *authValidator) ValidateRegisterRequest(payload *domain.AuthRegisterRequest) (err error) {
-	err = a.validator.Struct(payload)
+func (a *authValidator) ValidateRegisterRequest(payload *domain.AuthRegisterRequest) (err domain.HttpError) {
+	vError := a.validator.Struct(payload)
 
-	if castedObject, ok := err.(validator.ValidationErrors); ok {
-		for _, err := range castedObject {
-			switch err.Tag() {
+	if castedObject, ok := vError.(validator.ValidationErrors); ok {
+		for _, vError := range castedObject {
+			switch vError.Tag() {
 			case "required":
-				return errors.New(fmt.Sprintf("%s harus diisi", err.Field()))
+				return domain.NewBadRequestError(fmt.Errorf("%s harus diisi", vError.Field()))
 			case "email":
-				return errors.New(fmt.Sprintf("%s harus berupa valid email", err.Field()))
+				return domain.NewBadRequestError(fmt.Errorf("%s harus berupa valid email", vError.Field()))
 			case "gt":
-				return errors.New(fmt.Sprintf("%s harus lebih dari %s karakter", err.Field(), err.Param()))
+				return domain.NewBadRequestError(fmt.Errorf("%s harus lebih dari %s karakter", vError.Field(), vError.Param()))
 			case "numeric":
-				return errors.New(fmt.Sprintf("%s harus berupa angka", err.Field()))
+				return domain.NewBadRequestError(fmt.Errorf("%s harus berupa angka", vError.Field()))
 			}
 		}
 	}
 	return
 }
 
-func (a *authValidator) ValidateLoginRequest(payload *domain.AuthLoginRequest) (err error) {
-	err = a.validator.Struct(payload)
+func (a *authValidator) ValidateLoginRequest(payload *domain.AuthLoginRequest) (err domain.HttpError) {
+	vError := a.validator.Struct(payload)
 
-	if castedObject, ok := err.(validator.ValidationErrors); ok {
-		for _, err := range castedObject {
-			switch err.Tag() {
+	if castedObject, ok := vError.(validator.ValidationErrors); ok {
+		for _, vError := range castedObject {
+			switch vError.Tag() {
 			case "required":
-				return errors.New(fmt.Sprintf("%s harus diisi", err.Field()))
+				return domain.NewBadRequestError(fmt.Errorf("%s harus diisi", vError.Field()))
 			case "email":
-				return errors.New(fmt.Sprintf("%s harus berupa email yang valid", err.Field()))
+				return domain.NewBadRequestError(fmt.Errorf("%s harus berupa email yang valid", vError.Field()))
 			}
 		}
 	}

@@ -19,5 +19,5 @@ func CastDatabaseError(err error, throwError bool) domain.HttpError {
 		return domain.NewNotFoundError(errors.New("data tidak ditemukan"))
 	}
 
-	return domain.NewInternalServerError(errors.New("internal server error"))
+	return domain.NewInternalServerError(err)
 }

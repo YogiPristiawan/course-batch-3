@@ -43,15 +43,10 @@ func (e *exerciseHandler) handleCreateExercise(c *gin.Context) {
 	}
 
 	if err := e.exerciseValidator.ValidateCreateExercisePayload(&in); err != nil {
-		out := struct {
-			CommonResult domain.CommonResult `json:"-"`
-		}{
-			CommonResult: domain.CommonResult{
-				ResErrorCode:    400,
-				ResErrorMessage: err.Error(),
-			},
+		out := domain.CommonResult{}
+		if domain.HandleHttpError(err, &out) {
+			presentation.WriteRestOut(c, out, &out)
 		}
-		presentation.WriteRestOut(c, out, &out.CommonResult)
 		return
 	}
 
@@ -63,16 +58,8 @@ func (e *exerciseHandler) handleGetExerciseById(c *gin.Context) {
 	exerciseId, err := strconv.Atoi(c.Param("exerciseId"))
 	// if param not number
 	if err != nil {
-		out := struct {
-			CommonResult domain.CommonResult
-		}{
-			CommonResult: domain.CommonResult{
-				ResErrorCode:    400,
-				ResErrorMessage: "parameter harus berupa angka",
-			},
-		}
-
-		presentation.WriteRestOut(c, out, &out.CommonResult)
+		out := domain.CommonResult{}
+		presentation.WriteRestOut(c, out, &out)
 		return
 	}
 
@@ -80,24 +67,16 @@ func (e *exerciseHandler) handleGetExerciseById(c *gin.Context) {
 		ID: exerciseId,
 	}
 
-	// call use case
 	out := e.useCase.GetById(&in)
 	presentation.WriteRestOut(c, out, &out.CommonResult)
 }
 
 func (e *exerciseHandler) handleGetExerciseScore(c *gin.Context) {
 	exerciseId, err := strconv.Atoi(c.Param("exerciseId"))
+	// if param not number
 	if err != nil {
-		out := struct {
-			CommonResult domain.CommonResult
-		}{
-			CommonResult: domain.CommonResult{
-				ResErrorCode:    400,
-				ResErrorMessage: "parameter harus berupa angka",
-			},
-		}
-
-		presentation.WriteRestOut(c, out, &out.CommonResult)
+		out := domain.CommonResult{}
+		presentation.WriteRestOut(c, out, &out)
 		return
 	}
 
@@ -109,24 +88,16 @@ func (e *exerciseHandler) handleGetExerciseScore(c *gin.Context) {
 		ID: exerciseId,
 	}
 
-	// call use case
 	out := e.useCase.GetExerciseScore(&in)
 	presentation.WriteRestOut(c, out, &out.CommonResult)
 }
 
 func (e *exerciseHandler) handleCreateExerciseQuestion(c *gin.Context) {
 	exerciseId, err := strconv.Atoi(c.Param("exerciseId"))
+	// if param not number
 	if err != nil {
-		out := struct {
-			CommonResult domain.CommonResult
-		}{
-			CommonResult: domain.CommonResult{
-				ResErrorCode:    400,
-				ResErrorMessage: "parameter harus berupa angka",
-			},
-		}
-
-		presentation.WriteRestOut(c, out, &out.CommonResult)
+		out := domain.CommonResult{}
+		presentation.WriteRestOut(c, out, &out)
 		return
 	}
 
@@ -143,16 +114,8 @@ func (e *exerciseHandler) handleCreateExerciseQuestion(c *gin.Context) {
 	}
 
 	if err = e.questionValidator.ValidateCreateQuestionPayload(&in); err != nil {
-		out := struct {
-			CommonResult domain.CommonResult
-		}{
-			CommonResult: domain.CommonResult{
-				ResErrorCode:    400,
-				ResErrorMessage: err.Error(),
-			},
-		}
-
-		presentation.WriteRestOut(c, out, &out.CommonResult)
+		out := domain.CommonResult{}
+		presentation.WriteRestOut(c, out, &out)
 		return
 	}
 
@@ -164,17 +127,10 @@ func (e *exerciseHandler) handleCreateExerciseAnswer(c *gin.Context) {
 	exerciseId, err1 := strconv.Atoi(c.Param("exerciseId"))
 	questionId, err2 := strconv.Atoi(c.Param("questionId"))
 	authUserId, _ := c.Get("user_id")
-
+	// if param not number
 	if err1 != nil || err2 != nil {
-		out := struct {
-			CommonResult domain.CommonResult
-		}{
-			CommonResult: domain.CommonResult{
-				ResErrorCode:    400,
-				ResErrorMessage: "parameter harus berupa angka",
-			},
-		}
-		presentation.WriteRestOut(c, out, &out.CommonResult)
+		out := domain.CommonResult{}
+		presentation.WriteRestOut(c, out, &out)
 		return
 	}
 
@@ -191,15 +147,8 @@ func (e *exerciseHandler) handleCreateExerciseAnswer(c *gin.Context) {
 	}
 
 	if err := e.questionValidator.ValidateCreateAnswerPayload(&in); err != nil {
-		out := struct {
-			CommonResult domain.CommonResult
-		}{
-			CommonResult: domain.CommonResult{
-				ResErrorCode:    400,
-				ResErrorMessage: err.Error(),
-			},
-		}
-		presentation.WriteRestOut(c, out, &out.CommonResult)
+		out := domain.CommonResult{}
+		presentation.WriteRestOut(c, out, &out)
 		return
 	}
 

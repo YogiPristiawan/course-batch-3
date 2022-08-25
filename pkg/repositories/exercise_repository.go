@@ -19,8 +19,9 @@ func NewExerciseRepository(
 	}
 }
 
-func (e *exerciseRepository) Create(exercise *domain.ExerciseModel) (err error) {
-	err = e.db.Create(exercise).Error
+func (e *exerciseRepository) Create(exercise *domain.ExerciseModel) (err domain.HttpError) {
+	dbError := e.db.Create(exercise).Error
+	err = helpers.CastDatabaseError(dbError, true)
 	return
 }
 

@@ -29,8 +29,8 @@ func (e *exerciseUseCase) CreateExercise(in *domain.ExerciseCreateRequest) (out 
 		Description: in.Description,
 	}
 
-	if err := e.exerciseRepository.Create(exercise); err != nil {
-		out.SetError(500, err.Error())
+	err := e.exerciseRepository.Create(exercise)
+	if domain.HandleHttpError(err, &out.CommonResult) {
 		return
 	}
 
@@ -43,11 +43,15 @@ func (e *exerciseUseCase) CreateExercise(in *domain.ExerciseCreateRequest) (out 
 func (e *exerciseUseCase) GetById(in *domain.ExerciseGetByIdRequest) (out domain.ExerciseGetByIdResponse) {
 	// get exercise
 	exercise, err := e.exerciseRepository.GetById(in.ID)
-	domain.HandleHttpError(err, &out.CommonResult)
+	if domain.HandleHttpError(err, &out.CommonResult) {
+		return
+	}
 
 	// find questions
 	questions, err := e.questionRepository.FindByExerciseId(exercise.ID)
-	domain.HandleHttpError(err, &out.CommonResult)
+	if domain.HandleHttpError(err, &out.CommonResult) {
+		return
+	}
 
 	out.ID = exercise.ID
 	out.Title = exercise.Title
@@ -113,7 +117,6 @@ func (e *exerciseUseCase) GetExerciseScore(in *domain.ExerciseScoreRequest) (out
 func (e *exerciseUseCase) CreateExerciseQuestion(in *domain.ExerciseQuestionCreateRequest) (out domain.ExerciseQuestionCreateResponse) {
 	// verify if exercise exists
 	_, err := e.exerciseRepository.GetById(in.ExerciseId)
-
 	if domain.HandleHttpError(err, &out.CommonResult) {
 		return
 	}

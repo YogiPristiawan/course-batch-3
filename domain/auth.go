@@ -6,8 +6,8 @@ type AuthUseCase interface {
 }
 
 type AuthValidator interface {
-	ValidateRegisterRequest(*AuthRegisterRequest) error
-	ValidateLoginRequest(*AuthLoginRequest) error
+	ValidateRegisterRequest(*AuthRegisterRequest) HttpError
+	ValidateLoginRequest(*AuthLoginRequest) HttpError
 }
 
 type AuthRegisterRequest struct {

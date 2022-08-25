@@ -1,6 +1,7 @@
 package tokenize
 
 import (
+	"course/domain"
 	"errors"
 	"fmt"
 	"os"
@@ -11,14 +12,18 @@ import (
 
 var AccessTokenSecretKey []byte = []byte(os.Getenv("ACCESS_TOKEN_SECRET_KEY"))
 
-func GenerateAccessToken(userId int) (string, error) {
+func GenerateAccessToken(userId int) (token string, err domain.HttpError) {
 	claims := jwt.MapClaims{
 		"user_id": userId,
 		"exp":     time.Now().Add(24 * time.Hour).Unix(),
 		"iss":     "edspert",
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(AccessTokenSecretKey)
+	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, jwtError := t.SignedString(AccessTokenSecretKey)
+	if jwtError != nil {
+		err = domain.NewInternalServerError(err)
+	}
+	return
 }
 
 func DecodeJwt(tokenString string) (map[string]interface{}, error) {

@@ -17,8 +17,8 @@ func (u *UserModel) TableName() string {
 }
 
 type UserRepository interface {
-	Create(*UserModel) error
+	Create(*UserModel) HttpError
 
-	VerifyAvailableEmail(string) int64
-	GetUserByEmail(string, ...string) (*UserModel, error)
+	VerifyAvailableEmail(string) HttpError
+	GetUserByEmail(string, ...string) (*UserModel, HttpError)
 }
